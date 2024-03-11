@@ -1,0 +1,58 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSQL.Declare(String)
+V.Local.sOrder.Declare(String)
+
+'if populate hook move hidden lbl and txt in position
+Function.Intrinsic.Control.If(V.Caller.Hook,=,11560)
+	F.Intrinsic.Variable.SetProperty("GAB-LBL-1","PL","505")
+	F.Intrinsic.Variable.SetProperty("GAB-LBL-1","PT","74")
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PL","505")
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PT","89")
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PW","50")
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-LBL-1,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-TEXT-1,"HIDE",0)
+'	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-TEXT-1,"LOCK",0)
+	V.Passed.GAB-LBL-1.Set("Quote #")
+	
+'if hook is 11565 check to see if there is a quote, if there is set txtbox to quote# else set it empty
+Function.Intrinsic.Control.Else
+	F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+	Function.Intrinsic.String.LPad(V.Passed.000003,"0",7,V.Local.sOrder)
+	Function.Intrinsic.String.Build("SELECT QUOTE FROM ORDER_HEADER JOIN QUOTE_LINES ON ORDER_HEADER.QUOTE = QUOTE_LINES.QUOTE_NO where order_no = '{0}' AND QUOTE_LINES.QUOTE_WON = 'W'",V.Local.sOrder,V.Local.sSQL)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.sSQL)
+	Function.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+		V.Passed.GAB-TEXT-1.Set(V.ODBC.con!rst.FieldVal!Quote)
+	Function.Intrinsic.Control.Else
+		V.Passed.GAB-TEXT-1.Set("")
+	Function.Intrinsic.Control.EndIf
+	F.ODBC.con!rst.Close
+	F.ODBC.Connection!con.Close
+Function.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3895_SOQuoteNo.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	Function.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$$}$SS1$}$8/4/2015 12:47:38 PM
+Program.Sub.Comments.End
+
